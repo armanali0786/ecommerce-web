@@ -6,7 +6,6 @@ import { ProductCard } from './components/ProductCard';
 import { LoginModal } from './components/LoginModal';
 import { Footer } from './components/Footer';
 import { Filter } from 'lucide-react';
-import { GoogleLogin } from 'react-google-login'; // for Google Login integration
 import Modal from './components/ui/modal'; // You can create a simple Modal component for the popup
 
 const CLIENT_ID = '53884255184-ohor2bf86653irgi9askv5brrvmapqu9.apps.googleusercontent.com';
