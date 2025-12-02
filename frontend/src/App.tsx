@@ -123,7 +123,7 @@ function App() {
       const formattedFiles = formatGoogleDriveFiles(googleDriveFiles);
 
       // Send to backend API
-      const response = await fetch("http://localhost:5000/api/store-google-drive-files", {
+      const response = await fetch("https://ecommerce-web-4pmx.onrender.com/api/store-google-drive-files", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

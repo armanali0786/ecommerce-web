@@ -8,7 +8,7 @@ export function Footer() {
   // Load top-level folders when modal opens
   useEffect(() => {
     if (showDriveModal) {
-      fetch("/api/google-drive-folders")
+      fetch("https://ecommerce-web-4pmx.onrender.com/api/google-drive-folders")
         .then((res) => res.json())
         .then((data) => setGoogleDriveFiles(data.folders || []));
     }
@@ -16,7 +16,7 @@ export function Footer() {
 
   // Fetch files inside folder
   const fetchFilesInsideFolder = async (folderId) => {
-    const res = await fetch(`/api/google-drive/folder/${folderId}`);
+    const res = await fetch(`https://ecommerce-web-4pmx.onrender.com/api/google-drive/folder/${folderId}`);
     const data = await res.json();
     return data.files || [];
   };
