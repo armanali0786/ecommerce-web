@@ -5,14 +5,31 @@ export function Footer() {
   const [showDriveModal, setShowDriveModal] = useState(false);
   const [googleDriveFiles, setGoogleDriveFiles] = useState([]);
 
-  useEffect(() => {
-    if (showDriveModal) {
-      fetch("https://ecommerce-web-4pmx.onrender.com/api/google-drive-files")
-        .then((res) => res.json())
-        .then((data) => setGoogleDriveFiles(data.files || []))
-        .catch((err) => console.error(err));
-    }
-  }, [showDriveModal]);
+ useEffect(() => {
+  if (showDriveModal) {
+    // Fetch the Google Drive files when the modal is opened
+    fetch("https://ecommerce-web-4pmx.onrender.com/api/google-drive-files")
+      .then((res) => {
+        // Check if the response is ok (status 200)
+        if (!res.ok) {
+          throw new Error("Failed to fetch files");
+        }
+        return res.json();
+      })
+      .then((data) => {
+        // Log data to inspect it (for debugging)
+        console.log(data);
+
+        // Set the googleDriveFiles state with the data if available
+        setGoogleDriveFiles(data.files || []);
+      })
+      .catch((err) => {
+        // Log error for debugging
+        console.error("Error fetching Google Drive files:", err);
+      });
+  }
+}, [showDriveModal]); // Re-run this effect when showDriveModal changes
+
 
   // Recursive Drive Tree
   const DriveTree = ({ items }) => {
