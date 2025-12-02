@@ -20,9 +20,6 @@ function App() {
   const [googleDriveFiles, setGoogleDriveFiles] = useState([]); // To store files from Google Drive
   const [isAuthenticated, setIsAuthenticated] = useState(false); // Track if the user is authenticated
   const [modalInterval, setModalInterval] = useState(null); // Store interval ID
-  const [isGoogleLoginClicked, setIsGoogleLoginClicked] = useState(false); // Track if Google icon was clicked
-  const accessTokenData = localStorage.getItem("google_access_token");
-  console.log("Google Drive Files:", googleDriveFiles);
   // Function to close the modal
   const closeModal = () => {
     setIsModalOpen(false);
@@ -163,12 +160,6 @@ function App() {
     }
   }, [isAuthenticated, googleDriveFiles]);
 
-
-  // Trigger Google login on icon click
-  const handleGoogleIconClick = () => {
-    setIsGoogleLoginClicked(true);
-  };
-
   const handleLogout = () => {
     setUser(null);
   };
@@ -287,81 +278,6 @@ function App() {
     },
   ];
 
-  const DriveTree = ({ items, accessTokenData, loadChildren }) => {
-    const [openFolders, setOpenFolders] = useState({});
-
-    const toggleFolder = async (item) => {
-      const isOpen = openFolders[item.id];
-
-      // If closing → toggle only
-      if (isOpen) {
-        setOpenFolders({ ...openFolders, [item.id]: false });
-        return;
-      }
-
-      // If opening → load children first
-      if (item.mimeType === "application/vnd.google-apps.folder") {
-        const children = await loadChildren(accessToken, item.id);
-        setOpenFolders({
-          ...openFolders,
-          [item.id]: children, // store children
-        });
-      }
-    };
-
-    return (
-      <ul style={{ listStyle: "none", paddingLeft: "20px" }}>
-        {items.map((item) => {
-          const isFolder = item.mimeType === "application/vnd.google-apps.folder";
-          const isOpen = openFolders[item.id];
-
-          return (
-            <li key={item.id} style={{ marginBottom: "8px" }}>
-              <div
-                onClick={() => toggleFolder(item)}
-                style={{
-                  cursor: isFolder ? "pointer" : "default",
-                  display: "flex",
-                  gap: "8px",
-                  alignItems: "center",
-                }}
-              >
-                <strong>
-                  {isFolder ? (isOpen ? "📂" : "📁") : "📄"}
-                </strong>
-
-                <span>{item.name}</span>
-
-                {!isFolder && (
-                  <a
-                    href={`https://drive.google.com/file/d/${item.id}/view`}
-                    target="_blank"
-                    style={{
-                      marginLeft: "auto",
-                      textDecoration: "none",
-                      color: "#007bff",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    Open
-                  </a>
-                )}
-              </div>
-
-              {/* Render children only when folder is expanded */}
-              {isOpen && Array.isArray(isOpen) && (
-                <DriveTree
-                  items={isOpen}
-                  accessToken={accessToken}
-                  loadChildren={loadChildren}
-                />
-              )}
-            </li>
-          );
-        })}
-      </ul>
-    );
-  };
 
 
   return (
@@ -527,7 +443,6 @@ function App() {
                 You must be logged in to perform this action.
               </p>
 
-              {/* GOOGLE LOGIN BUTTON */}
               <button
                 onClick={handleGoogleLogin}
                 className="w-full border py-3 rounded-lg flex items-center justify-center space-x-2 mb-3 hover:bg-gray-50 cursor-pointer"
@@ -544,62 +459,6 @@ function App() {
           </div>
         </Modal>
       )}
-
-      {/* {googleDriveFiles.length > 0 && (
-        <div style={{ marginTop: "20px" }}>
-          <h2>Your Google Drive Files</h2>
-          <ul style={{ listStyle: "none", padding: 0 }}>
-            {googleDriveFiles.map((file) => (
-              <li
-                key={file.id}
-                style={{
-                  padding: "10px",
-                  border: "1px solid #ddd",
-                  marginBottom: "8px",
-                  borderRadius: "8px",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "10px",
-                }}
-              >
-                <span style={{ fontSize: "24px" }}>
-                  {getFileIcon(file.mimeType)}
-                </span>
-
-                <div style={{ display: "flex", flexDirection: "column" }}>
-                  <strong>{file.name}</strong>
-                  <small style={{ color: "gray" }}>{file.mimeType}</small>
-                </div>
-
-                <a
-                  href={`https://drive.google.com/file/d/${file.id}/view`}
-                  target="_blank"
-                  style={{
-                    marginLeft: "auto",
-                    textDecoration: "none",
-                    color: "#007bff",
-                    fontWeight: "bold",
-                  }}
-                >
-                  Open
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )} */}
-      {googleDriveFiles.length > 0 && (
-        <div style={{ marginTop: "20px" }}>
-          <h2>Your Google Drive Files</h2>
-
-          <DriveTree
-            items={googleDriveFiles}
-            accessToken={accessTokenData}
-            loadChildren={fetchFilesInsideFolder}
-          />
-        </div>
-      )}
-
     </>
   );
 }
