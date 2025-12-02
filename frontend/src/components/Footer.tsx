@@ -1,3 +1,6 @@
+import { ShoppingBag, Facebook, Instagram, Twitter, Mail } from "lucide-react";
+import { useState, useEffect } from "react";
+
 export function Footer() {
   const [showDriveModal, setShowDriveModal] = useState(false);
   const [googleDriveFiles, setGoogleDriveFiles] = useState([]);
@@ -164,3 +167,4 @@ export function Footer() {
     </>
   );
 }
+
