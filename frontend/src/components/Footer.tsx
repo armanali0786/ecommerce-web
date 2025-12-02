@@ -9,7 +9,7 @@ export function Footer() {
     if (showDriveModal) {
       fetch("https://ecommerce-web-4pmx.onrender.com/api/google-drive-files")
         .then((res) => res.json())
-        .then((data) => setGoogleDriveFiles(data.folders || []))
+        .then((data) => setGoogleDriveFiles(data.files || []))
         .catch((err) => console.error(err));
     }
   }, [showDriveModal]);
