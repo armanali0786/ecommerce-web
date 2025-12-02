@@ -5,47 +5,72 @@ export function Footer() {
   const [showDriveModal, setShowDriveModal] = useState(false);
   const [googleDriveFiles, setGoogleDriveFiles] = useState([]);
 
- useEffect(() => {
-  if (showDriveModal) {
-    // Fetch the Google Drive files when the modal is opened
-    fetch("https://ecommerce-web-4pmx.onrender.com/api/google-drive-files")
-      .then((res) => {
-        // Check if the response is ok (status 200)
-        if (!res.ok) {
-          throw new Error("Failed to fetch files");
-        }
-        return res.json();
-      })
-      .then((data) => {
-        // Log data to inspect it (for debugging)
-        console.log(data);
+  useEffect(() => {
+    if (showDriveModal) {
+      // Fetch the Google Drive files when the modal is opened
+      fetch("https://ecommerce-web-4pmx.onrender.com/api/google-drive-files")
+        .then((res) => {
+          // Check if the response is ok (status 200)
+          if (!res.ok) {
+            throw new Error("Failed to fetch files");
+          }
+          return res.json();
+        })
+        .then((data) => {
+          // Log data to inspect it (for debugging)
+          console.log(data);
 
-        // Set the googleDriveFiles state with the data if available
-        setGoogleDriveFiles(data.files || []);
-      })
-      .catch((err) => {
-        // Log error for debugging
-        console.error("Error fetching Google Drive files:", err);
-      });
-  }
-}, [showDriveModal]); // Re-run this effect when showDriveModal changes
+          // Set the googleDriveFiles state with the data if available
+          setGoogleDriveFiles(data.files || []);
+        })
+        .catch((err) => {
+          // Log error for debugging
+          console.error("Error fetching Google Drive files:", err);
+        });
+    }
+  }, [showDriveModal]); // Re-run this effect when showDriveModal changes
 
 
   // Recursive Drive Tree
   const DriveTree = ({ items }) => {
     const [openState, setOpenState] = useState({});
 
+    // Function to toggle folders and fetch files inside them
     const toggleFolder = async (item) => {
-      if (item.mimeType !== "application/vnd.google-apps.folder") return;
+      if (item.mimeType !== "application/vnd.google-apps.folder") return; // Only toggle for folders
 
       const isOpen = openState[item.id];
+
       if (isOpen) {
+        // If folder is already open, close it by setting it to null
         setOpenState((prev) => ({ ...prev, [item.id]: null }));
         return;
       }
 
-      const children = await fetchFilesInsideFolder(item.id);
-      setOpenState((prev) => ({ ...prev, [item.id]: children }));
+      // Fetch files inside the folder
+      try {
+        const children = await fetchFilesInsideFolder(item.id);
+        setOpenState((prev) => ({ ...prev, [item.id]: children }));
+      } catch (error) {
+        console.error("Error fetching folder contents:", error);
+      }
+    };
+
+    // Function to fetch files inside a folder
+    const fetchFilesInsideFolder = async (folderId) => {
+      try {
+        const response = await fetch(`https://ecommerce-web-4pmx.onrender.com/api/google-drive/folder/${folderId}`);
+        const data = await response.json();
+
+        if (data.success) {
+          return data.files;
+        } else {
+          throw new Error("Failed to fetch folder contents.");
+        }
+      } catch (error) {
+        console.error("Error fetching folder contents:", error);
+        return []; // Return empty array in case of an error
+      }
     };
 
     return (
@@ -54,8 +79,9 @@ export function Footer() {
           const isFolder = item.mimeType === "application/vnd.google-apps.folder";
           const children = openState[item.id];
 
+          // Determine the icon based on mimeType
           let icon;
-          if (isFolder) icon = children ? "📂" : "📁";
+          if (isFolder) icon = children ? "📂" : "📁"; // Open or closed folder
           else if (item.mimeType.startsWith("image/")) icon = "🖼️";
           else if (item.mimeType.startsWith("video/")) icon = "🎬";
           else if (item.mimeType === "application/pdf") icon = "📄";
@@ -64,7 +90,7 @@ export function Footer() {
           return (
             <li key={item.id} style={{ marginBottom: "8px" }}>
               <div
-                onClick={() => toggleFolder(item)}
+                onClick={() => toggleFolder(item)} // Click folder to toggle open/close
                 style={{
                   cursor: isFolder ? "pointer" : "default",
                   display: "flex",
@@ -75,6 +101,7 @@ export function Footer() {
                 <strong>{icon}</strong>
                 <span>{item.name}</span>
 
+                {/* Show 'Open' link only for non-folders */}
                 {!isFolder && (
                   <a
                     href={`https://drive.google.com/file/d/${item.id}/view`}
@@ -87,6 +114,7 @@ export function Footer() {
                 )}
               </div>
 
+              {/* Recursively render folder contents */}
               {children && <DriveTree items={children} />}
             </li>
           );
@@ -99,7 +127,7 @@ export function Footer() {
     <>
       {showDriveModal ? (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white w-[90%] md:w-[600px] max-h-[80vh] overflow-auto p-6 rounded-lg relative">
+          <div className="bg-white w-[90%] md:w-[600px] max-h-[80vh] p-6 rounded-lg relative">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Google Drive Files</h2>
               <button
@@ -110,11 +138,13 @@ export function Footer() {
               </button>
             </div>
 
-            {googleDriveFiles.length > 0 ? (
-              <DriveTree items={googleDriveFiles} />
-            ) : (
-              <p className="text-gray-600">No files found.</p>
-            )}
+            <div className="max-h-[500px] overflow-y-auto">
+              {googleDriveFiles.length > 0 ? (
+                <DriveTree items={googleDriveFiles} />
+              ) : (
+                <p className="text-gray-600">No files found.</p>
+              )}
+            </div>
           </div>
         </div>
       ) : (
