@@ -8,7 +8,7 @@ import { Footer } from './components/Footer';
 import { Filter } from 'lucide-react';
 import Modal from './components/ui/modal'; // You can create a simple Modal component for the popup
 
-const CLIENT_ID = '53884255184-ohor2bf86653irgi9askv5brrvmapqu9.apps.googleusercontent.com';
+const CLIENT_ID = '543476674222-borgqq71a7umqkqhamu8km74hgm5s01a.apps.googleusercontent.com';
 interface User {
   email: string;
 }

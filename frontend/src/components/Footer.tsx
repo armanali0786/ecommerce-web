@@ -127,7 +127,9 @@ export function Footer() {
     <>
       {showDriveModal ? (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white w-[90%] md:w-[600px] max-h-[80vh] p-6 rounded-lg relative">
+          <div className="bg-white w-[90%] md:w-[600px] max-h-[50vh] p-6 rounded-lg relative"
+            style={{ overflowY: "auto" , maxHeight: "50vh" }}
+          >
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Google Drive Files</h2>
               <button
