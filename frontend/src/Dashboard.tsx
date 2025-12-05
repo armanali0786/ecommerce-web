@@ -484,6 +484,7 @@ function Dashboard() {
             await res.json();
         }
     };
+    
     const buildDriveTree = (files) => {
         const map = {};
         files.forEach(f => map[f.id] = { ...f, children: [] });

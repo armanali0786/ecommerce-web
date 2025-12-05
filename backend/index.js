@@ -1,6 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
+const axios = require("axios");
 const cors = require("cors");
 require("dotenv").config();
 
@@ -128,7 +129,8 @@ app.post("/api/auth/google", async (req, res) => {
         code_verifier: verifier,
       }
     );
-
+    console.log("res only ",tokenRes);
+    console.log("res data this ",tokenRes.data);
     return res.json(tokenRes.data); // send tokens (access + refresh)
   } catch (error) {
     console.error("OAuth error:", error.response?.data || error);
