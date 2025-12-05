@@ -32,23 +32,182 @@ export function Footer() {
 
 
   // Recursive Drive Tree
+  // const DriveTree = ({ items }) => {
+  //   const [openState, setOpenState] = useState({});
+
+  //   // Function to toggle folders and fetch files inside them
+  //   const toggleFolder = async (item) => {
+  //     if (item.mimeType !== "application/vnd.google-apps.folder") return; // Only toggle for folders
+
+  //     const isOpen = openState[item.id];
+
+  //     if (isOpen) {
+  //       // If folder is already open, close it by setting it to null
+  //       setOpenState((prev) => ({ ...prev, [item.id]: null }));
+  //       return;
+  //     }
+
+  //     // Fetch files inside the folder
+  //     try {
+  //       const children = await fetchFilesInsideFolder(item.id);
+  //       setOpenState((prev) => ({ ...prev, [item.id]: children }));
+  //     } catch (error) {
+  //       console.error("Error fetching folder contents:", error);
+  //     }
+  //   };
+
+  //   // Function to fetch files inside a folder
+  //   const fetchFilesInsideFolder = async (folderId) => {
+  //     try {
+  //       const response = await fetch(`https://ecommerce-web-4pmx.onrender.com/api/google-drive/folder/${folderId}`);
+  //       const data = await response.json();
+
+  //       if (data.success) {
+  //         return data.files;
+  //       } else {
+  //         throw new Error("Failed to fetch folder contents.");
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching folder contents:", error);
+  //       return []; // Return empty array in case of an error
+  //     }
+  //   };
+  // const downloadFile = async (fileId, fileName) => {
+  //   try {
+  //     const accessToken = localStorage.getItem("google_access_token");
+
+  //     const response = await fetch(
+  //       `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${accessToken}`,
+  //         },
+  //       }
+  //     );
+
+  //     const blob = await response.blob();
+  //     const url = window.URL.createObjectURL(blob);
+
+  //     const a = document.createElement("a");
+  //     a.href = url;
+  //     a.download = fileName;
+  //     document.body.appendChild(a);
+  //     a.click();
+  //     a.remove();
+  //     window.URL.revokeObjectURL(url);
+  //   } catch (err) {
+  //     console.error("Error downloading file:", err);
+  //   }
+  // };
+
+  //   return (
+  //     <ul style={{ listStyle: "none", paddingLeft: "20px" }}>
+  //       {items.map((item) => {
+  //         const isFolder = item.mimeType === "application/vnd.google-apps.folder";
+  //         const children = openState[item.id];
+
+  //         // Determine the icon based on mimeType
+  //         let icon;
+  //         if (isFolder) icon = children ? "📂" : "📁"; // Open or closed folder
+  //         else if (item.mimeType.startsWith("image/")) icon = "🖼️";
+  //         else if (item.mimeType.startsWith("video/")) icon = "🎬";
+  //         else if (item.mimeType === "application/pdf") icon = "📄";
+  //         else icon = "📄";
+
+  //         return (
+  //           <li key={item.id} style={{ marginBottom: "8px" }}>
+  //             <div
+  //               onClick={() => toggleFolder(item)} // Click folder to toggle open/close
+  //               style={{
+  //                 cursor: isFolder ? "pointer" : "default",
+  //                 display: "flex",
+  //                 alignItems: "center",
+  //                 gap: "8px",
+  //               }}
+  //             >
+  //               <strong>{icon}</strong>
+  //               <span>{item.name}</span>
+
+  //               {/* Show 'Open' link only for non-folders */}
+  //               {!isFolder && (
+  //                 <a
+  //                   href={`https://drive.google.com/file/d/${item.id}/view`}
+  //                   target="_blank"
+  //                   rel="noopener noreferrer"
+  //                   className="ml-auto text-blue-600 font-semibold"
+  //                 >
+  //                   Open
+  //                 </a>
+  //               )}
+  //               <button
+  //                   onClick={(e) => {
+  //                     e.stopPropagation(); // prevent folder toggle
+  //                     downloadFile(item.id, item.name);
+  //                   }}
+  //                   style={{
+  //                     marginLeft: "10px",
+  //                     background: "#1e90ff",
+  //                     color: "white",
+  //                     border: "none",
+  //                     padding: "4px 8px",
+  //                     borderRadius: "4px",
+  //                     cursor: "pointer",
+  //                   }}
+  //                 >
+  //                   Download
+  //                 </button>
+  //             </div>
+
+  //             {/* Recursively render folder contents */}
+  //             {children && <DriveTree items={children} />}
+  //           </li>
+  //         );
+  //       })}
+  //     </ul>
+  //   );
+  // };
   const DriveTree = ({ items }) => {
     const [openState, setOpenState] = useState({});
 
-    // Function to toggle folders and fetch files inside them
+    // Function to fetch files inside a folder (Moved here for context completeness)
+    const fetchFilesInsideFolder = async (folderId) => {
+      try {
+        const response = await fetch(`https://ecommerce-web-4pmx.onrender.com/api/google-drive/folder/${folderId}`);
+        const data = await response.json();
+
+        if (data.success) {
+          // Sort children to ensure folders appear before files in the collapsible view
+          return data.files.sort((a, b) => {
+            const isAFolder = a.mimeType === "application/vnd.google-apps.folder";
+            const isBFolder = b.mimeType === "application/vnd.google-apps.folder";
+            if (isAFolder && !isBFolder) return -1; // Folder a comes first
+            if (!isAFolder && isBFolder) return 1;  // Folder b comes first
+            return a.name.localeCompare(b.name); // Sort by name otherwise
+          });
+        } else {
+          throw new Error("Failed to fetch folder contents.");
+        }
+      } catch (error) {
+        console.error("Error fetching folder contents:", error);
+        return [];
+      }
+    };
+
+    // Function to toggle folders
     const toggleFolder = async (item) => {
       if (item.mimeType !== "application/vnd.google-apps.folder") return; // Only toggle for folders
 
       const isOpen = openState[item.id];
 
       if (isOpen) {
-        // If folder is already open, close it by setting it to null
+        // Close folder
         setOpenState((prev) => ({ ...prev, [item.id]: null }));
         return;
       }
 
-      // Fetch files inside the folder
+      // Open folder and fetch its contents
       try {
+        // NOTE: This is where you call the function to get the children
         const children = await fetchFilesInsideFolder(item.id);
         setOpenState((prev) => ({ ...prev, [item.id]: children }));
       } catch (error) {
@@ -56,68 +215,55 @@ export function Footer() {
       }
     };
 
-    // Function to fetch files inside a folder
-    const fetchFilesInsideFolder = async (folderId) => {
+    const downloadFile = async (fileId, fileName) => {
       try {
-        const response = await fetch(`https://ecommerce-web-4pmx.onrender.com/api/google-drive/folder/${folderId}`);
-        const data = await response.json();
+        const accessToken = localStorage.getItem("google_access_token");
 
-        if (data.success) {
-          return data.files;
-        } else {
-          throw new Error("Failed to fetch folder contents.");
-        }
-      } catch (error) {
-        console.error("Error fetching folder contents:", error);
-        return []; // Return empty array in case of an error
+        const response = await fetch(
+          `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error("Error downloading file:", err);
       }
     };
-  const downloadFile = async (fileId, fileName) => {
-    try {
-      const accessToken = localStorage.getItem("google_access_token");
-
-      const response = await fetch(
-        `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
-      );
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error("Error downloading file:", err);
-    }
-  };
 
     return (
       <ul style={{ listStyle: "none", paddingLeft: "20px" }}>
         {items.map((item) => {
           const isFolder = item.mimeType === "application/vnd.google-apps.folder";
+          // children is the array of files/folders inside this item (if it's a folder and open)
           const children = openState[item.id];
 
-          // Determine the icon based on mimeType
+          // Determine the icon
           let icon;
           if (isFolder) icon = children ? "📂" : "📁"; // Open or closed folder
           else if (item.mimeType.startsWith("image/")) icon = "🖼️";
           else if (item.mimeType.startsWith("video/")) icon = "🎬";
           else if (item.mimeType === "application/pdf") icon = "📄";
+          else if (item.mimeType.endsWith("spreadsheet")) icon = "📊"; // Google Sheet example
+          else if (item.mimeType.endsWith("document")) icon = "📝";    // Google Doc example
           else icon = "📄";
 
           return (
             <li key={item.id} style={{ marginBottom: "8px" }}>
               <div
-                onClick={() => toggleFolder(item)} // Click folder to toggle open/close
+                onClick={() => toggleFolder(item)} // This correctly triggers collapse/expand
                 style={{
                   cursor: isFolder ? "pointer" : "default",
                   display: "flex",
@@ -128,37 +274,41 @@ export function Footer() {
                 <strong>{icon}</strong>
                 <span>{item.name}</span>
 
-                {/* Show 'Open' link only for non-folders */}
+                {/* Only files (not folders) get the direct links/download buttons */}
                 {!isFolder && (
-                  <a
-                    href={`https://drive.google.com/file/d/${item.id}/view`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="ml-auto text-blue-600 font-semibold"
-                  >
-                    Open
-                  </a>
+                  <>
+                    <a
+                      href={`https://drive.google.com/file/d/${item.id}/view`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ml-auto text-blue-600 font-semibold"
+                    >
+                      Open
+                    </a>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation(); // prevent folder toggle
+                        downloadFile(item.id, item.name);
+                      }}
+                      style={{
+                        marginLeft: "10px",
+                        background: "#1e90ff",
+                        color: "white",
+                        border: "none",
+                        padding: "4px 8px",
+                        borderRadius: "4px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      Download
+                    </button>
+                  </>
                 )}
-                <button
-                    onClick={(e) => {
-                      e.stopPropagation(); // prevent folder toggle
-                      downloadFile(item.id, item.name);
-                    }}
-                    style={{
-                      marginLeft: "10px",
-                      background: "#1e90ff",
-                      color: "white",
-                      border: "none",
-                      padding: "4px 8px",
-                      borderRadius: "4px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Download
-                  </button>
+                {isFolder && children === null && <span style={{ marginLeft: "10px", color: "#666" }}>(Click to open)</span>}
               </div>
 
-              {/* Recursively render folder contents */}
+              {/* 🔥 RECURSIVE CALL FOR COLLAPSIBLE CONTENT 🔥 */}
+              {/* This block is only rendered if 'children' (the folder contents) is truthy (not null/undefined) */}
               {children && <DriveTree items={children} />}
             </li>
           );
@@ -166,13 +316,12 @@ export function Footer() {
       </ul>
     );
   };
-
   return (
     <>
       {showDriveModal ? (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white w-[90%] md:w-[600px] max-h-[50vh] p-6 rounded-lg relative"
-            style={{ overflowY: "auto" , maxHeight: "50vh" }}
+            style={{ overflowY: "auto", maxHeight: "50vh" }}
           >
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Google Drive Files</h2>
