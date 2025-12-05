@@ -113,37 +113,58 @@ app.get("/api/google-drive/folder/:folderId", async (req, res) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
-
 app.post("/api/auth/google", async (req, res) => {
   try {
     const { code, verifier } = req.body;
 
-    const tokenRes = await axios.post(
-      "https://oauth2.googleapis.com/token",
-      {
-        client_id: process.env.GOOGLE_CLIENT_ID,
-        client_secret: process.env.GOOGLE_CLIENT_SECRET,
-        code,
-        redirect_uri: process.env.GOOGLE_REDIRECT_URI,
-        grant_type: "authorization_code",
-        code_verifier: verifier,
-      }
-    );
-    console.log("res only ",tokenRes);
-    console.log("res data this ",tokenRes.data);
-    return res.json(tokenRes.data); // send tokens (access + refresh)
+    const tokenRes = await axios.post("https://oauth2.googleapis.com/token", {
+      client_id: process.env.GOOGLE_CLIENT_ID,
+      client_secret: process.env.GOOGLE_CLIENT_SECRET, // If PKCE ONLY → Remove this line
+      code,
+      redirect_uri: process.env.GOOGLE_REDIRECT_URI,
+      grant_type: "authorization_code",
+      code_verifier: verifier,
+    });
+
+    return res.json(tokenRes.data);
   } catch (error) {
     console.error("OAuth error:", error.response?.data || error);
-    res.status(500).json({ error: "Google OAuth failed" });
+    return res.status(500).json({ error: "Google OAuth failed" });
   }
 });
+
+// app.post("/api/auth/google", async (req, res) => {
+//   try {
+//     const { code, verifier } = req.body;
+
+//     const tokenRes = await axios.post(
+//       "https://oauth2.googleapis.com/token",
+//       {
+//         client_id: process.env.GOOGLE_CLIENT_ID,
+//         client_secret: process.env.GOOGLE_CLIENT_SECRET,
+//         code,
+//         redirect_uri: process.env.GOOGLE_REDIRECT_URI,
+//         grant_type: "authorization_code",
+//         code_verifier: verifier,
+//       }
+//     );
+//     console.log("res only ",tokenRes);
+//     console.log("res data this ",tokenRes.data);
+//     return res.json(tokenRes.data); // send tokens (access + refresh)
+//   } catch (error) {
+//     console.error("OAuth error:", error.response?.data || error);
+//     res.status(500).json({ error: "Google OAuth failed" });
+//   }
+// });
 
 app.get("/api/google-drive/files", async (req, res) => {
   try {
     const accessToken = req.headers.authorization?.split(" ")[1];
+    if (!accessToken)
+      return res.status(401).json({ error: "Missing access token" });
 
     const response = await axios.get(
-      "https://www.googleapis.com/drive/v3/files?fields=*",
+      "https://www.googleapis.com/drive/v3/files?fields=files(id,name,mimeType,parents)",
       {
         headers: { Authorization: `Bearer ${accessToken}` },
       }
@@ -151,6 +172,7 @@ app.get("/api/google-drive/files", async (req, res) => {
 
     res.json(response.data.files);
   } catch (err) {
+    console.error("Google Drive fetch error:", err.response?.data || err);
     res.status(500).json({ error: "Failed to fetch files from Google Drive" });
   }
 });
