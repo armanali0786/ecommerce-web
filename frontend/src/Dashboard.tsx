@@ -418,22 +418,11 @@ function Dashboard() {
         const startFullDriveSync = async () => {
             try {
                 const accessToken = localStorage.getItem("google_access_token");
-                const fetchNeeded = localStorage.getItem("drive_fetch_needed") === "true";
 
                 if (!accessToken) {
                     console.log("No Google access token found.");
                     return;
                 }
-
-                // Avoid duplicate runs: use a state flag or localStorage lock
-                if (!fetchNeeded) {
-                    console.log("Drive fetch not needed.");
-                    return;
-                }
-
-                // optionally set UI loading state
-                setIsModalOpen(true); // or custom loading state
-
                 // 1) fetch all files (handles pagination)
                 const allFiles = await fetchAllDriveFilesFromGoogle(accessToken);
                 console.log("Total files fetched from Google Drive:", allFiles.length);
