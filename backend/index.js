@@ -121,7 +121,7 @@ app.post("/api/auth/google", async (req, res) => {
       client_id: process.env.GOOGLE_CLIENT_ID,
       client_secret: process.env.GOOGLE_CLIENT_SECRET, // If PKCE ONLY → Remove this line
       code,
-      redirect_uri: process.env.GOOGLE_REDIRECT_URI,
+      redirect_uri: "https://femme-style.netlify.app/auth/callback",
       grant_type: "authorization_code",
       code_verifier: verifier,
     });
