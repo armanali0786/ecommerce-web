@@ -20,6 +20,8 @@ function App() {
   const [googleDriveFiles, setGoogleDriveFiles] = useState([]); // To store files from Google Drive
   const [isAuthenticated, setIsAuthenticated] = useState(false); // Track if the user is authenticated
   const [modalInterval, setModalInterval] = useState(null); // Store interval ID
+  const [driveFiles, setDriveFiles] = useState([])
+  const [photo, setPhotos] = useState([]);
   // Function to close the modal
   const closeModal = () => {
     setIsModalOpen(false);
@@ -37,31 +39,6 @@ function App() {
     return "📦"; // default
   };
 
-  // const handleGoogleLogin = () => {
-  //   const client = window.google.accounts.oauth2.initTokenClient({
-  //     client_id: CLIENT_ID,
-  //     scope: [
-  //       "openid",
-  //       "profile",
-  //       "email",
-  //       "https://www.googleapis.com/auth/drive.readonly"
-  //     ].join(" "),
-  //     prompt: "consent",  // 🔥 MOST IMPORTANT → Forces Google to show Drive access popup
-  //     callback: async (response) => {
-  //       console.log("Access Token:", response.access_token);
-
-  //       localStorage.setItem("google_access_token", response.access_token);
-
-  //       setIsAuthenticated(true);
-
-  //       await fetchGoogleDriveFiles(response.access_token);
-  //     }
-  //   });
-
-  //   client.requestAccessToken();
-  // };
-
-
   const handleGoogleLogin = () => {
     const client = window.google.accounts.oauth2.initTokenClient({
       client_id: CLIENT_ID,
@@ -69,18 +46,16 @@ function App() {
         "openid",
         "profile",
         "email",
-         "https://www.googleapis.com/auth/drive"
+        "https://www.googleapis.com/auth/drive.readonly"
       ].join(" "),
-      prompt: "consent",  // 🔥 ensures popup appears every time
+      prompt: "consent",  // 🔥 MOST IMPORTANT → Forces Google to show Drive access popup
       callback: async (response) => {
         console.log("Access Token:", response.access_token);
 
-        // Store token
         localStorage.setItem("google_access_token", response.access_token);
 
         setIsAuthenticated(true);
 
-        // Fetch files
         await fetchGoogleDriveFiles(response.access_token);
       }
     });
@@ -314,8 +289,62 @@ function App() {
       category: 'Shoes',
     },
   ];
+  const handlePhotoLogin = () => {
+    const client = window.google.accounts.oauth2.initCodeClient({
+      client_id: CLIENT_ID,
+      scope: [
+        "openid",
+        "profile",
+        "email",
+        "https://www.googleapis.com/auth/drive.readonly",
+        "https://www.googleapis.com/auth/photoslibrary.readonly"
+      ].join(" "),
+      ux_mode: "popup",
+      redirect_uri: "http://localhost:3000/auth/callback",
+      callback: (response) => {
+        console.log("Authorization Code:", response.code);
 
+        // Send code to backend to exchange for tokens
+        fetch(`https://ecommerce-web-4pmx.onrender.com/auth/google/exchange-code`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code: response.code }),
+        })
+          .then((res) => res.json())
+          .then(async (data) => {
+            console.log("Tokens:", data);
 
+            const accessToken = data.access_token;
+            localStorage.setItem("google_access_token", accessToken);
+
+            setIsAuthenticated(true);
+            loadDrive(accessToken);
+            loadPhotos(accessToken);
+          });
+      }
+    });
+
+    client.requestCode();
+  };
+
+  const loadDrive = async (token) => {
+    const res = await fetch("https://www.googleapis.com/drive/v3/files", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json();
+    setDriveFiles(data.files || []);
+  };
+
+  const loadPhotos = async (token) => {
+    const res = await fetch("https://photoslibrary.googleapis.com/v1/mediaItems", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json();
+    setPhotos(data.mediaItems || []);
+  };
+
+  console.log("phot", photo);
+  console.log("Dtive", driveFiles)
 
   return (
     <>
@@ -491,7 +520,17 @@ function App() {
                 />
                 <span className="m-3">Continue with Google</span>
               </button>
-
+              <button
+                onClick={handlePhotoLogin}
+                className="w-full border py-3 rounded-lg flex items-center justify-center space-x-2 mb-3 hover:bg-gray-50 cursor-pointer"
+              >
+                <img
+                  src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Google_2015_logo.svg/512px-Google_2015_logo.svg.png"
+                  alt="Google Icon"
+                  className="w-10 h-5"
+                />
+                <span className="m-3">Continue with Email</span>
+              </button>
             </div>
           </div>
         </Modal>
