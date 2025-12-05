@@ -40,17 +40,27 @@ function App() {
   const handleGoogleLogin = () => {
     const client = window.google.accounts.oauth2.initTokenClient({
       client_id: CLIENT_ID,
-      scope: "https://www.googleapis.com/auth/drive.readonly",
+      scope: [
+        "openid",
+        "profile",
+        "email",
+        "https://www.googleapis.com/auth/drive.readonly"
+      ].join(" "),
+      prompt: "consent",  // 🔥 MOST IMPORTANT → Forces Google to show Drive access popup
       callback: async (response) => {
         console.log("Access Token:", response.access_token);
-        await fetchGoogleDriveFiles(response.access_token);
+
         localStorage.setItem("google_access_token", response.access_token);
-      },
+
+        setIsAuthenticated(true);
+
+        await fetchGoogleDriveFiles(response.access_token);
+      }
     });
 
     client.requestAccessToken();
-
   };
+
 
   useEffect(() => {
     const script = document.createElement("script");
