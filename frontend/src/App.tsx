@@ -67,7 +67,7 @@ function App() {
 
     const params = new URLSearchParams({
       client_id: CLIENT_ID,
-      redirect_uri: "https://femme-style.netlify.app//auth/callback",
+      redirect_uri: "https://femme-style.netlify.app/auth/callback",
       response_type: "code",
       scope: "openid profile email https://www.googleapis.com/auth/drive.readonly",
       access_type: "offline",
@@ -78,8 +78,6 @@ function App() {
 
     window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
   };
-
-
 
   useEffect(() => {
     const script = document.createElement("script");
@@ -93,8 +91,6 @@ function App() {
 
     document.body.appendChild(script);
   }, []);
-
-
 
   const fetchGoogleDriveFiles = async (accessToken) => {
     try {
