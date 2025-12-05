@@ -14,6 +14,7 @@ export default function GoogleCallback() {
       })
         .then((res) => res.json())
         .then(async (data) => {
+          console.log("Data", data);
           localStorage.setItem("google_access_token", data.access_token);
 
           window.location.href = "/"; // redirect to homepage after login
