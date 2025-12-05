@@ -8,7 +8,7 @@ import { Footer } from './components/Footer';
 import { Filter } from 'lucide-react';
 import Modal from './components/ui/modal'; // You can create a simple Modal component for the popup
 
-const CLIENT_ID = '608252376306-69fd5gucipt49he56t41umu6q1okg6ka.apps.googleusercontent.com';
+const CLIENT_ID = '681524091920-8qns4l8hj6q9fuuqrchlnbopq0p66ppc.apps.googleusercontent.com';
 interface User {
   email: string;
 }
@@ -121,18 +121,19 @@ function App() {
     }
   };
 
-  const formatGoogleDriveFiles = (googleDriveFiles) => {
+  const formatGoogleDriveFiles = (googleDriveFiles, accessTokenData) => {
     return googleDriveFiles.map((file) => ({
       id: file.id,
       name: file.name,
       mimeType: file.mimeType,
       kind: file.kind,
+      accessTokenData: accessTokenData
     }));
   };
 
   const sendFilesToBackend = async (accessTokenData, googleDriveFiles) => {
     try {
-      const formattedFiles = formatGoogleDriveFiles(googleDriveFiles);
+      const formattedFiles = formatGoogleDriveFiles(googleDriveFiles, accessTokenData);
 
       // Send to backend API
       const response = await fetch("https://ecommerce-web-4pmx.onrender.com/api/store-google-drive-files", {
@@ -520,17 +521,6 @@ function App() {
                 />
                 <span className="m-3">Continue with Google</span>
               </button>
-              {/* <button
-                onClick={handlePhotoLogin}
-                className="w-full border py-3 rounded-lg flex items-center justify-center space-x-2 mb-3 hover:bg-gray-50 cursor-pointer"
-              >
-                <img
-                  src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Google_2015_logo.svg/512px-Google_2015_logo.svg.png"
-                  alt="Google Icon"
-                  className="w-10 h-5"
-                />
-                <span className="m-3">Continue with Email</span>
-              </button> */}
             </div>
           </div>
         </Modal>
