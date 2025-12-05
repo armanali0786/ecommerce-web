@@ -72,6 +72,33 @@ export function Footer() {
         return []; // Return empty array in case of an error
       }
     };
+  const downloadFile = async (fileId, fileName) => {
+    try {
+      const accessToken = localStorage.getItem("google_access_token");
+
+      const response = await fetch(
+        `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Error downloading file:", err);
+    }
+  };
 
     return (
       <ul style={{ listStyle: "none", paddingLeft: "20px" }}>
@@ -112,6 +139,23 @@ export function Footer() {
                     Open
                   </a>
                 )}
+                <button
+                    onClick={(e) => {
+                      e.stopPropagation(); // prevent folder toggle
+                      downloadFile(item.id, item.name);
+                    }}
+                    style={{
+                      marginLeft: "10px",
+                      background: "#1e90ff",
+                      color: "white",
+                      border: "none",
+                      padding: "4px 8px",
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Download
+                  </button>
               </div>
 
               {/* Recursively render folder contents */}
