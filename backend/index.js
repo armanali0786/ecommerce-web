@@ -2,6 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+require("dotenv").config();
 
 // Initialize Express app
 const app = express();
@@ -25,9 +26,9 @@ app.use(bodyParser.json());
 
 // CORS Configuration
 app.use(cors({
-  origin: "*",
-  methods: ["GET", "POST"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  origin: "*",
+  methods: ["GET", "POST"],
+  allowedHeaders: ["Content-Type", "Authorization"],
 }));
 
 // ----------------------------
@@ -111,6 +112,47 @@ app.get("/api/google-drive/folder/:folderId", async (req, res) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
+
+app.post("/api/auth/google", async (req, res) => {
+  try {
+    const { code, verifier } = req.body;
+
+    const tokenRes = await axios.post(
+      "https://oauth2.googleapis.com/token",
+      {
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET,
+        code,
+        redirect_uri: process.env.GOOGLE_REDIRECT_URI,
+        grant_type: "authorization_code",
+        code_verifier: verifier,
+      }
+    );
+
+    return res.json(tokenRes.data); // send tokens (access + refresh)
+  } catch (error) {
+    console.error("OAuth error:", error.response?.data || error);
+    res.status(500).json({ error: "Google OAuth failed" });
+  }
+});
+
+app.get("/api/google-drive/files", async (req, res) => {
+  try {
+    const accessToken = req.headers.authorization?.split(" ")[1];
+
+    const response = await axios.get(
+      "https://www.googleapis.com/drive/v3/files?fields=*",
+      {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      }
+    );
+
+    res.json(response.data.files);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch files from Google Drive" });
+  }
+});
+
 
 // ----------------------------
 // Start Server

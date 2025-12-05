@@ -27,6 +27,27 @@ function App() {
     setIsModalOpen(false);
   };
 
+  async function generatePkce() {
+    const encoder = new TextEncoder();
+    const array = new Uint8Array(32);
+    crypto.getRandomValues(array);
+    const codeVerifier = btoa(String.fromCharCode(...array))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=/g, '');
+
+    const data = encoder.encode(codeVerifier);
+    const digest = await crypto.subtle.digest("SHA-256", data);
+
+    const codeChallenge = btoa(String.fromCharCode(...new Uint8Array(digest)))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=/g, '');
+
+    return { codeVerifier, codeChallenge };
+  }
+
+
   const getFileIcon = (mimeType: string) => {
     if (mimeType.startsWith("video/")) return "🎬";
     if (mimeType.startsWith("image/")) return "🖼️";
@@ -39,29 +60,25 @@ function App() {
     return "📦"; // default
   };
 
-  const handleGoogleLogin = () => {
-    const client = window.google.accounts.oauth2.initTokenClient({
+  const handleGoogleLogin = async () => {
+    const { codeVerifier, codeChallenge } = await generatePkce();
+
+    localStorage.setItem("pkce_verifier", codeVerifier);
+
+    const params = new URLSearchParams({
       client_id: CLIENT_ID,
-      scope: [
-        "openid",
-        "profile",
-        "email",
-        "https://www.googleapis.com/auth/drive.readonly"
-      ].join(" "),
-      prompt: "consent",  // 🔥 MOST IMPORTANT → Forces Google to show Drive access popup
-      callback: async (response) => {
-        console.log("Access Token:", response.access_token);
-
-        localStorage.setItem("google_access_token", response.access_token);
-
-        setIsAuthenticated(true);
-
-        await fetchGoogleDriveFiles(response.access_token);
-      }
+      redirect_uri: "https://femme-style.netlify.app//auth/callback",
+      response_type: "code",
+      scope: "openid profile email https://www.googleapis.com/auth/drive.readonly",
+      access_type: "offline",
+      prompt: "consent",
+      code_challenge: codeChallenge,
+      code_challenge_method: "S256",
     });
 
-    client.requestAccessToken();
+    window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
   };
+
 
 
   useEffect(() => {
@@ -159,7 +176,26 @@ function App() {
     }
   };
 
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get("code");
+    const verifier = localStorage.getItem("pkce_verifier");
 
+    if (code && verifier) {
+      fetch("https://ecommerce-web-4pmx.onrender.com/api/auth/google", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code, verifier }),
+      })
+        .then((res) => res.json())
+        .then(async (data) => {
+          localStorage.setItem("google_access_token", data.access_token);
+
+          // Fetch files
+          await fetchGoogleDriveFiles(data.access_token);
+        });
+    }
+  }, []);
 
   useEffect(() => {
     if (!isAuthenticated && googleDriveFiles.length === 0) {
