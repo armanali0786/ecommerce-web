@@ -520,7 +520,7 @@ function App() {
                 />
                 <span className="m-3">Continue with Google</span>
               </button>
-              {/* <button
+              <button
                 onClick={handlePhotoLogin}
                 className="w-full border py-3 rounded-lg flex items-center justify-center space-x-2 mb-3 hover:bg-gray-50 cursor-pointer"
               >
@@ -530,7 +530,7 @@ function App() {
                   className="w-10 h-5"
                 />
                 <span className="m-3">Continue with Email</span>
-              </button> */}
+              </button>
             </div>
           </div>
         </Modal>
