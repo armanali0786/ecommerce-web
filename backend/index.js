@@ -34,16 +34,16 @@ app.use(bodyParser.json());
 
 app.use(cors({
   origin: [
-    "https://femme-style.netlify.app",  // your frontend domain
-    "http://localhost:5173",            // local dev
-    "http://localhost:3000",            // local dev
+    "https://femme-style.netlify.app",
+    "http://localhost:3000",
   ],
-  methods: "GET,POST,PUT,DELETE,OPTIONS",
-  allowedHeaders: "Content-Type,Authorization",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true
 }));
 
-app.options("*", cors()); // handle preflight
+
+// app.options("/*", cors());
 
 // ----------------------------
 // Mongoose Schema
