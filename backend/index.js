@@ -119,7 +119,7 @@ app.post("/api/auth/google", async (req, res) => {
 
     const tokenRes = await axios.post("https://oauth2.googleapis.com/token", {
       client_id: process.env.GOOGLE_CLIENT_ID,
-      // client_secret: process.env.GOOGLE_CLIENT_SECRET,
+      client_secret: process.env.GOOGLE_CLIENT_SECRET,
       code,
       redirect_uri: "https://femme-style.netlify.app/auth/callback",
       grant_type: "authorization_code",
@@ -184,9 +184,13 @@ app.get("/api/google-drive/download/:fileId", async (req, res) => {
 
 app.get("/api/google-drive/files", async (req, res) => {
   try {
-    const accessToken = req.headers.authorization?.split(" ")[1];
-    if (!accessToken)
-      return res.status(401).json({ error: "Missing access token" });
+    const accessToken = req.query.access_token; // take token from params only
+
+    if (!accessToken) {
+      return res.status(400).json({
+        error: "Access token is required in query parameter: ?access_token=",
+      });
+    }
 
     const response = await axios.get(
       "https://www.googleapis.com/drive/v3/files?fields=files(id,name,mimeType,parents)",
@@ -197,10 +201,11 @@ app.get("/api/google-drive/files", async (req, res) => {
 
     res.json(response.data.files);
   } catch (err) {
-    console.error("Google Drive fetch error:", err.response?.data || err);
+    console.error("Google Drive fetch error:", err.response?.data || err.message);
     res.status(500).json({ error: "Failed to fetch files from Google Drive" });
   }
 });
+
 
 
 // ----------------------------
