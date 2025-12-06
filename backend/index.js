@@ -119,7 +119,7 @@ app.post("/api/auth/google", async (req, res) => {
 
     const tokenRes = await axios.post("https://oauth2.googleapis.com/token", {
       client_id: process.env.GOOGLE_CLIENT_ID,
-      client_secret: process.env.GOOGLE_CLIENT_SECRET, // If PKCE ONLY → Remove this line
+      // client_secret: process.env.GOOGLE_CLIENT_SECRET,
       code,
       redirect_uri: "https://femme-style.netlify.app/auth/callback",
       grant_type: "authorization_code",
@@ -132,6 +132,31 @@ app.post("/api/auth/google", async (req, res) => {
     return res.status(500).json({ error: "Google OAuth failed" });
   }
 });
+
+app.get("/api/google-drive/download/:fileId", async (req, res) => {
+  try {
+    const accessToken = req.headers.authorization?.split(" ")[1];
+    const { fileId } = req.params;
+
+    const response = await axios.get(
+      `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
+      {
+        responseType: "arraybuffer",
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        },
+      }
+    );
+
+    res.set("Content-Type", "application/octet-stream");
+    res.send(response.data);
+
+  } catch (err) {
+    console.error("Download error:", err.response?.data || err);
+    res.status(500).json({ error: "Download failed" });
+  }
+});
+
 
 // app.post("/api/auth/google", async (req, res) => {
 //   try {
