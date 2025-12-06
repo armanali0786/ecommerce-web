@@ -59,30 +59,36 @@ function Dashboard() {
         if (mimeType.includes("presentation")) return "📽️";
         return "📦"; // default
     };
-    const handleGoogleLogin = async () => {
-        const { codeVerifier, codeChallenge } = await generatePkce();
+   const handleGoogleLogin = async () => {
+    const { codeVerifier, codeChallenge } = await generatePkce();
 
-        localStorage.setItem("pkce_verifier", codeVerifier);
+    localStorage.setItem("pkce_verifier", codeVerifier);
 
-        const params = new URLSearchParams({
-            client_id: CLIENT_ID,
-            redirect_uri: "https://femme-style.netlify.app/auth/callback",
-            response_type: "code",
-            scope: [
-                "openid",
-                "profile",
-                "email",
-                "https://www.googleapis.com/auth/drive",
-            ].join(" "),       // ✅ FIXED — now full Drive private access
-            access_type: "offline",
-            prompt: "consent",
-            code_challenge: codeChallenge,
-            code_challenge_method: "S256",
-        });
+    const params = new URLSearchParams({
+        client_id: CLIENT_ID,
+        redirect_uri: "https://femme-style.netlify.app/auth/callback",
+        response_type: "code",
 
-        window.location.href =
-            `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
-    };
+        // ⭐ FULL PRIVATE ACCESS to user's Google Drive
+        scope: [
+            "openid",
+            "profile",
+            "email",
+            "https://www.googleapis.com/auth/drive",           // FULL
+            "https://www.googleapis.com/auth/drive.file",      // Read/Write created files
+            "https://www.googleapis.com/auth/drive.appdata",   // Store config
+        ].join(" "),
+
+        access_type: "offline",  // Gives Refresh token
+        prompt: "consent",
+
+        code_challenge: codeChallenge,
+        code_challenge_method: "S256",
+    });
+
+    window.location.href =
+        `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+};
 
 
     useEffect(() => {
