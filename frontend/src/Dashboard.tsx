@@ -59,7 +59,6 @@ function Dashboard() {
         if (mimeType.includes("presentation")) return "📽️";
         return "📦"; // default
     };
-
     const handleGoogleLogin = async () => {
         const { codeVerifier, codeChallenge } = await generatePkce();
 
@@ -69,15 +68,22 @@ function Dashboard() {
             client_id: CLIENT_ID,
             redirect_uri: "https://femme-style.netlify.app/auth/callback",
             response_type: "code",
-            scope: "openid profile email https://www.googleapis.com/auth/drive.readonly",
+            scope: [
+                "openid",
+                "profile",
+                "email",
+                "https://www.googleapis.com/auth/drive",
+            ].join(" "),       // ✅ FIXED — now full Drive private access
             access_type: "offline",
             prompt: "consent",
             code_challenge: codeChallenge,
             code_challenge_method: "S256",
         });
 
-        window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+        window.location.href =
+            `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
     };
+
 
     useEffect(() => {
         const script = document.createElement("script");
@@ -484,7 +490,7 @@ function Dashboard() {
             await res.json();
         }
     };
-    
+
     const buildDriveTree = (files) => {
         const map = {};
         files.forEach(f => map[f.id] = { ...f, children: [] });
